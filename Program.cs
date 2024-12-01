@@ -45,7 +45,7 @@ class Program
             transportPlan[i] = new Element[M];
             for (int j = 0; j < M; j++)
             {
-                transportPlan[i][j].Value = -1;
+                transportPlan[i][j].Weight = -1;
                 notDefined.Add((i, j));
             }
         }
@@ -109,19 +109,19 @@ class Program
             getIndexesToFillNeeds(N, M, costs, indexes, transportPlan);
             foreach (var (row, col) in indexes)
             {
-                transportPlan[row][col].Value = Math.Min(supplies[row], demands[col]);
+                transportPlan[row][col].Weight = Math.Min(supplies[row], demands[col]);
                 notDefined.Remove((row, col));
-                supplies[row] -= transportPlan[row][col].Value;
-                demands[col] -= transportPlan[row][col].Value;
+                supplies[row] -= transportPlan[row][col].Weight.Value;
+                demands[col] -= transportPlan[row][col].Weight.Value;
 
                 if (supplies[row] == 0)
                 {
 
                     for (int i = 0; i < M; i++)
                     {
-                        if (transportPlan[row][i].Value == -1)
+                        if (transportPlan[row][i].Weight == -1)
                         {
-                            transportPlan[row][i].Value = 0;
+                            transportPlan[row][i].Weight = 0;
                             notDefined.Remove((row, i));
                         }
                     }
@@ -130,9 +130,9 @@ class Program
                 {
                     for (int i = 0; i < N; i++)
                     {
-                        if (transportPlan[i][col].Value == -1)
+                        if (transportPlan[i][col].Weight == -1)
                         {
-                            transportPlan[i][col].Value = 0;
+                            transportPlan[i][col].Weight = 0;
                             notDefined.Remove((i, col));
                         }
                     }
@@ -149,7 +149,7 @@ class Program
             }
             else
             {
-                transportPlan[coords.Item1][coords.Item2].Value = supplies[coords.Item1];
+                transportPlan[coords.Item1][coords.Item2].Weight = supplies[coords.Item1];
                 supplies[coords.Item1] = demands[coords.Item2] = 0;
             }
         }
@@ -239,7 +239,7 @@ class Program
             var twoMin = costs
                 .Select(row => row[j])
                 .Select((value, index) => (value, index))
-                .Where(x => transportPlan[x.index][j].Value == -1)
+                .Where(x => transportPlan[x.index][j].Weight == -1)
                 .OrderBy(x => x.ToTuple().Item1)
                 .Take(2)
                 .ToArray();
@@ -256,7 +256,7 @@ class Program
         {
             var twoMin = costs[i]
                 .Select((value, index) => (value, index))
-                .Where(x => transportPlan[i][x.index].Value == -1)
+                .Where(x => transportPlan[i][x.index].Weight == -1)
                 .OrderBy(x => x.ToTuple().Item1)
                 .Take(2)
                 .ToArray();

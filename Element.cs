@@ -21,5 +21,15 @@ namespace Transport
         public int? Weight { get; set; }
 
         public bool IsPotentialNegative { get; set; }
+
+        /// <summary>
+        /// Индекс по строкам(N)
+        /// </summary>
+        public int IndexRow { get; set; }
+
+        /// <summary>
+        /// Индекс по столбцам(M)
+        /// </summary>
+        public int IndexCol { get; set; }
     }
 }
