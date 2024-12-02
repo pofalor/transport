@@ -50,7 +50,7 @@ namespace Transport
             var allPaths = new List<List<TreeForOptimize>>();
             var path = new List<TreeForOptimize>();
             // 3.1 Найти путь, по которому можно пройти так, чтобы можно было создать замкнутый круг и двигаться можно только влево, вправо, вверх, вниз
-            GetAllCyclePathsForElement(tree, tree, path, allPaths);
+            GetAllCyclePathsForElement(tree, tree, tree, path, allPaths);
             var minLenTreeList = new List<TreeForOptimize>();
             foreach (var item in allPaths)
             {
@@ -121,7 +121,7 @@ namespace Transport
             }
         }
 
-        private static void GetAllCyclePathsForElement(TreeForOptimize currentElement, TreeForOptimize searchingElement, List<TreeForOptimize> path,
+        private static void GetAllCyclePathsForElement(TreeForOptimize currentElement, TreeForOptimize prevElement, TreeForOptimize searchingElement, List<TreeForOptimize> path,
             List<List<TreeForOptimize>> allPaths)
         {
             path.Add(currentElement);
@@ -129,44 +129,45 @@ namespace Transport
             var right = currentElement.RightElement;
             var top = currentElement.TopElement;
             var down = currentElement.DownElement;
-            if (left != null)
+            //если пришли слева, то обратно идти не надо
+            if (left != null && prevElement.RightElement != currentElement)
             {
                 if (left != searchingElement)
                 {
-                    GetAllCyclePathsForElement(left, searchingElement, path, allPaths);
+                    GetAllCyclePathsForElement(left, currentElement, searchingElement, path, allPaths);
                 }
                 else
                 {
                     allPaths.Add(path);
                 }
             }
-            if (right != null)
+            if (right != null && prevElement.LeftElement != currentElement)
             {
                 if (right != searchingElement)
                 {
-                    GetAllCyclePathsForElement(right, searchingElement, path, allPaths);
+                    GetAllCyclePathsForElement(right, currentElement, searchingElement, path, allPaths);
                 }
                 else
                 {
                     allPaths.Add(path);
                 }
             }
-            if (top != null)
+            if (top != null && prevElement.DownElement != currentElement)
             {
                 if (top != searchingElement)
                 {
-                    GetAllCyclePathsForElement(top, searchingElement, path, allPaths);
+                    GetAllCyclePathsForElement(top, currentElement, searchingElement, path, allPaths);
                 }
                 else
                 {
                     allPaths.Add(path);
                 }
             }
-            if (down != null)
+            if (down != null && prevElement.TopElement != currentElement)
             {
                 if (down != searchingElement)
                 {
-                    GetAllCyclePathsForElement(down, searchingElement, path, allPaths);
+                    GetAllCyclePathsForElement(down, currentElement,  searchingElement, path, allPaths);
                 }
                 else
                 {
