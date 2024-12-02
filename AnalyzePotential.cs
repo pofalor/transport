@@ -46,6 +46,7 @@ namespace Transport
 
             //3. Цикл перераспределения поставок
             var allTreeElements = new Dictionary<Element, TreeForOptimize>();
+            CacheTree.currentElement = minElem;
             var tree = new TreeForOptimize(minElem, transportPlan, allTreeElements, N, M);
             var allPaths = new List<List<TreeForOptimize>>();
             var path = new List<TreeForOptimize>();
@@ -121,7 +122,7 @@ namespace Transport
             }
         }
 
-        private static void GetAllCyclePathsForElement(TreeForOptimize currentElement, TreeForOptimize prevElement, TreeForOptimize searchingElement, List<TreeForOptimize> path,
+        private static bool GetAllCyclePathsForElement(TreeForOptimize currentElement, TreeForOptimize prevElement, TreeForOptimize searchingElement, List<TreeForOptimize> path,
             List<List<TreeForOptimize>> allPaths)
         {
             path.Add(currentElement);
@@ -134,46 +135,63 @@ namespace Transport
             {
                 if (left != searchingElement)
                 {
-                    GetAllCyclePathsForElement(left, currentElement, searchingElement, path, allPaths);
+                    var res = GetAllCyclePathsForElement(left, currentElement, searchingElement, path, allPaths);
+                    if (res)
+                        return res;
                 }
                 else
                 {
+                    path.Remove(currentElement);
                     allPaths.Add(path);
+                    return true;
                 }
             }
             if (right != null && prevElement.LeftElement != currentElement)
             {
                 if (right != searchingElement)
                 {
-                    GetAllCyclePathsForElement(right, currentElement, searchingElement, path, allPaths);
+                    var res = GetAllCyclePathsForElement(right, currentElement, searchingElement, path, allPaths);
+                    if (res)
+                        return res;
                 }
                 else
                 {
+                    path.Remove(currentElement);
                     allPaths.Add(path);
+                    return true;
                 }
             }
             if (top != null && prevElement.DownElement != currentElement)
             {
                 if (top != searchingElement)
                 {
-                    GetAllCyclePathsForElement(top, currentElement, searchingElement, path, allPaths);
+                    var res = GetAllCyclePathsForElement(top, currentElement, searchingElement, path, allPaths);
+                    if (res)
+                        return res;
                 }
                 else
                 {
+                    path.Remove(currentElement);
                     allPaths.Add(path);
+                    return true;
                 }
             }
             if (down != null && prevElement.TopElement != currentElement)
             {
                 if (down != searchingElement)
                 {
-                    GetAllCyclePathsForElement(down, currentElement,  searchingElement, path, allPaths);
+                    var res = GetAllCyclePathsForElement(down, currentElement,  searchingElement, path, allPaths);
+                    if (res)
+                        return res;
                 }
                 else
                 {
+                    path.Remove(currentElement);
                     allPaths.Add(path);
+                    return true;
                 }
             }
+            return false;
         }
     }
 }

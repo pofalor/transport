@@ -58,7 +58,7 @@ namespace Transport
                 return null;
             }
             var element = transportPlan[resultRow][resultCol];
-            if (element != null && (element.Weight == -1 || element.Weight == 0))
+            if (element != null && (element != CacheTree.currentElement || !element.IsPotentialNegative) && (element.Weight == -1 || element.Weight == 0))
             {
                 if (offsetRow.HasValue)
                 {
@@ -73,5 +73,10 @@ namespace Transport
             return element;
         }
 
+    }
+
+    public static class CacheTree
+    {
+        public static Element currentElement;
     }
 }
