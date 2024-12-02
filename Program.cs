@@ -1,8 +1,12 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Transport;
+
 //using OptimalRoute;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -27,27 +31,43 @@ class Program
     {
         // Чтение входных данных
         int N, M;
+        //потребности потребителей
         int[] supplies, demands;
         int[][] costs;
         ReadAndFillData(out N, out M, out supplies, out demands, out costs);
 
         CheckSumsResources(supplies, demands);
 
-        int[][] transportPlan = new int[N][];
+        Element[][] transportPlan = new Element[N][];
         HashSet<(int, int)> notDefined = new HashSet<(int, int)>();
         for (int i = 0; i < N; i++)
         {
-            transportPlan[i] = new int[M];
+            transportPlan[i] = new Element[M];
             for (int j = 0; j < M; j++)
             {
-                transportPlan[i][j] = -1;
+                transportPlan[i][j] = new Element();
+                transportPlan[i][j].Weight = -1;
+                transportPlan[i][j].Value = costs[i][j];
                 notDefined.Add((i, j));
             }
         }
+        List<(int, int)> ValuesIndexes = new List<(int, int)> ();
+        distributeByVogel(N, M, costs, transportPlan, supplies, demands, notDefined, ValuesIndexes);
 
-        distributeByVogel(N, M, costs, transportPlan, supplies, demands, notDefined);
+        var rowPotentials = new int?[N];
+        var colPotentials = new int?[M];
 
-        Console.WriteLine(transportPlan);
+        // находим потенциалы строк и столбцов
+        CreatePotentialsAndCheck.CreatePotentialsOnRowsAndCols(N, M, transportPlan, ValuesIndexes, rowPotentials, colPotentials);
+        // цикл проверки пока не будет отрицательных потенциалов
+        while (CreatePotentialsAndCheck.CreatePotentialsOnMatrix(rowPotentials, colPotentials, transportPlan))
+        {
+            // оптимизация через AnalyzePotentials
+
+            CreatePotentialsAndCheck.CreatePotentialsOnRowsAndCols(N, M, transportPlan, ValuesIndexes, rowPotentials, colPotentials);
+        }
+
+        Console.WriteLine(JsonSerializer.Serialize(transportPlan));
 
         //int totalCost = SolveSync(N, M, supplies, demands, costs, transportPlan);
 
@@ -76,6 +96,14 @@ class Program
         }
 
     }
+    /// <summary>
+    /// Считать и записать данные
+    /// </summary>
+    /// <param name="N"></param>
+    /// <param name="M"></param>
+    /// <param name="supplies">Запасы поставщиков</param>
+    /// <param name="demands">Потребности потребителей</param>
+    /// <param name="costs"></param>
     static void ReadAndFillData(out int N, out int M, out int[] supplies, out int[] demands, out int[][] costs)
     {
         var input = File.ReadAllLines("in.txt");
@@ -87,7 +115,7 @@ class Program
         costs = input.Skip(3).Select(line => line.Trim().Split().Select(int.Parse).ToArray()).ToArray();
     }
 
-    static void distributeByVogel(int N, int M, int[][] costs, int[][] transportPlan, int[] supplies, int[] demands, HashSet<(int, int)> notDefined)
+    static void distributeByVogel(int N, int M, int[][] costs, Element[][] transportPlan, int[] supplies, int[] demands, HashSet<(int, int)> notDefined, List<(int, int)> values)
     {
         while (notDefined.Count > 1)
         {
@@ -96,19 +124,21 @@ class Program
             getIndexesToFillNeeds(N, M, costs, indexes, transportPlan);
             foreach (var (row, col) in indexes)
             {
-                transportPlan[row][col] = Math.Min(supplies[row], demands[col]);
+                transportPlan[row][col].Weight = Math.Min(supplies[row], demands[col]);
+                if (transportPlan[row][col].Weight != 0) values.Add((row, col));
                 notDefined.Remove((row, col));
-                supplies[row] -= transportPlan[row][col];
-                demands[col] -= transportPlan[row][col];
+                supplies[row] -= transportPlan[row][col].Weight;
+                demands[col] -= transportPlan[row][col].Weight;
+
 
                 if (supplies[row] == 0)
                 {
 
                     for (int i = 0; i < M; i++)
                     {
-                        if (transportPlan[row][i] == -1)
+                        if (transportPlan[row][i].Weight == -1)
                         {
-                            transportPlan[row][i] = 0;
+                            transportPlan[row][i].Weight = 0;
                             notDefined.Remove((row, i));
                         }
                     }
@@ -117,9 +147,9 @@ class Program
                 {
                     for (int i = 0; i < N; i++)
                     {
-                        if (transportPlan[i][col] == -1)
+                        if (transportPlan[i][col].Weight == -1)
                         {
-                            transportPlan[i][col] = 0;
+                            transportPlan[i][col].Weight = 0;
                             notDefined.Remove((i, col));
                         }
                     }
@@ -136,14 +166,15 @@ class Program
             }
             else
             {
-                transportPlan[coords.Item1][coords.Item2] = supplies[coords.Item1];
+                transportPlan[coords.Item1][coords.Item2].Weight = supplies[coords.Item1];
+                values.Add(coords);
                 supplies[coords.Item1] = demands[coords.Item2] = 0;
             }
         }
         Console.WriteLine(transportPlan);
     }
 
-    static void getIndexesToFillNeeds(int N, int M, int[][] costs, List<(int, int)> indexes, int[][] transportPlan)
+    static void getIndexesToFillNeeds(int N, int M, int[][] costs, List<(int, int)> indexes, Element[][] transportPlan)
     {
         //int[] rowColDiff = new int[N + M];
         var rowColDiff = new PriorityQueue<(int, (int, int)), int>();
@@ -219,20 +250,20 @@ class Program
 
 
 
-    static void findMinValsRowOrCol(int i, int j, int[][] costs, int[][] transportPlan, PriorityQueue<(int, (int, int)), int> rowColDiff)
+    static void findMinValsRowOrCol(int i, int j, int[][] costs, Element[][] transportPlan, PriorityQueue<(int, (int, int)), int> rowColDiff)
     {
         if (i == -1)
         {
             var twoMin = costs
                 .Select(row => row[j])
-                .Select((value, index) => (value, index))
-                .Where(x => transportPlan[x.index][j] == -1)
+                .Select((Weight, index) => (Weight, index))
+                .Where(x => transportPlan[x.index][j].Weight == -1)
                 .OrderBy(x => x.ToTuple().Item1)
                 .Take(2)
                 .ToArray();
             if (twoMin.Length == 2)
             {
-                rowColDiff.Enqueue((twoMin[1].value - twoMin[0].value, (twoMin[0].index, j)), twoMin[0].value - twoMin[1].value);
+                rowColDiff.Enqueue((twoMin[1].Weight - twoMin[0].Weight, (twoMin[0].index, j)), twoMin[0].Weight - twoMin[1].Weight);
             }
             else
             {
@@ -242,14 +273,14 @@ class Program
         else
         {
             var twoMin = costs[i]
-                .Select((value, index) => (value, index))
-                .Where(x => transportPlan[i][x.index] == -1)
+                .Select((Weight, index) => (Weight, index))
+                .Where(x => transportPlan[i][x.index].Weight == -1)
                 .OrderBy(x => x.ToTuple().Item1)
                 .Take(2)
                 .ToArray();
             if (twoMin.Length == 2)
             {
-                rowColDiff.Enqueue((twoMin[1].value - twoMin[0].value, (i, twoMin[0].index)), twoMin[0].value - twoMin[1].value);
+                rowColDiff.Enqueue((twoMin[1].Weight - twoMin[0].Weight, (i, twoMin[0].index)), twoMin[0].Weight - twoMin[1].Weight);
             }
             else
             {
