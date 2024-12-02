@@ -80,7 +80,7 @@ namespace Transport
             Console.WriteLine();
         }
     
-        public static bool CreatePotentialsOnMatrix(int?[] rowPotentials, int?[] colPotentials, Element[][] transportPlan)
+        public static bool CreatePotentialsOnMatrix(int?[] rowPotentials, int?[] colPotentials, Element[][] transportPlan, List<(int, int)> ValuesIndexes)
         {
             bool isNegative = false;
             for (int i = 0; i < transportPlan.Length; i++)
@@ -91,11 +91,27 @@ namespace Transport
                     {
                         transportPlan[i][j].Potential = transportPlan[i][j].Value - rowPotentials[i] - colPotentials[j];
                         transportPlan[i][j].IsPotentialNegative = (transportPlan[i][j].Potential < 0);
-                        isNegative = isNegative || transportPlan[i][j].IsPotentialNegative
+                        isNegative = isNegative || transportPlan[i][j].IsPotentialNegative;
                     }
+                    else
+                    {
+                        ValuesIndexes.Add((i, j));
+                    }
+                        
                 }
             }
             return isNegative;                
+        }
+
+        public static void GetValueIndexes(, Element[][] transportPlan)
+        {
+            for (int i = 0; i < transportPlan.Length; i++)
+            {
+                for (int j = 0; j < transportPlan[j].Length; j++)
+                {
+                    if 
+                }
+            }
         }
     }
 }

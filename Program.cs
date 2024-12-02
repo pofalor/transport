@@ -52,7 +52,7 @@ class Program
             }
         }
         List<(int, int)> ValuesIndexes = new List<(int, int)> ();
-        distributeByVogel(N, M, costs, transportPlan, supplies, demands, notDefined, ValuesIndexes);
+        distributeByVogel(N, M, costs, transportPlan, supplies, demands, notDefined);
 
         var rowPotentials = new int?[N];
         var colPotentials = new int?[M];
@@ -60,7 +60,7 @@ class Program
         // находим потенциалы строк и столбцов
         CreatePotentialsAndCheck.CreatePotentialsOnRowsAndCols(N, M, transportPlan, ValuesIndexes, rowPotentials, colPotentials);
         // цикл проверки пока не будет отрицательных потенциалов
-        while (CreatePotentialsAndCheck.CreatePotentialsOnMatrix(rowPotentials, colPotentials, transportPlan))
+        while (CreatePotentialsAndCheck.CreatePotentialsOnMatrix(rowPotentials, colPotentials, transportPlan, ValuesIndexes))
         {
             // оптимизация через AnalyzePotentials
 
@@ -115,7 +115,7 @@ class Program
         costs = input.Skip(3).Select(line => line.Trim().Split().Select(int.Parse).ToArray()).ToArray();
     }
 
-    static void distributeByVogel(int N, int M, int[][] costs, Element[][] transportPlan, int[] supplies, int[] demands, HashSet<(int, int)> notDefined, List<(int, int)> values)
+    static void distributeByVogel(int N, int M, int[][] costs, Element[][] transportPlan, int[] supplies, int[] demands, HashSet<(int, int)> notDefined) //, List<(int, int)> values)
     {
         while (notDefined.Count > 1)
         {
@@ -125,7 +125,7 @@ class Program
             foreach (var (row, col) in indexes)
             {
                 transportPlan[row][col].Weight = Math.Min(supplies[row], demands[col]);
-                if (transportPlan[row][col].Weight != 0) values.Add((row, col));
+                //if (transportPlan[row][col].Weight != 0) values.Add((row, col));
                 notDefined.Remove((row, col));
                 supplies[row] -= transportPlan[row][col].Weight;
                 demands[col] -= transportPlan[row][col].Weight;
@@ -167,7 +167,7 @@ class Program
             else
             {
                 transportPlan[coords.Item1][coords.Item2].Weight = supplies[coords.Item1];
-                values.Add(coords);
+                //values.Add(coords);
                 supplies[coords.Item1] = demands[coords.Item2] = 0;
             }
         }
