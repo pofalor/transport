@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -129,6 +129,7 @@ class Program
                 notDefined.Remove((row, col));
                 supplies[row] -= transportPlan[row][col].Weight;
                 demands[col] -= transportPlan[row][col].Weight;
+
 
                 if (supplies[row] == 0)
                 {

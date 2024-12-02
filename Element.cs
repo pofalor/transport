@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,9 +22,20 @@ namespace Transport
 
         public bool IsPotentialNegative { get; set; }
 
+        /// <summary>
+        /// Индекс по строкам(N)
+        /// </summary>
+        public int IndexRow { get; set; }
+
+        /// <summary>
+        /// Индекс по столбцам(M)
+        /// </summary>
+        public int IndexCol { get; set; }
+
         public override string ToString()
         {
             return this.Value.ToString()+ "{" + this.Weight.ToString() + "}";
         }
+
     }
 }
