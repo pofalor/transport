@@ -67,11 +67,12 @@ namespace Transport
                     maxLenTreeList = item;
             }
             //3.2 После этого переходим к ячейке, которую нужно добавить в решение
-            
+
 
             //3.3. смотрим две связанные ячейки друг с другм. Берём мин значение из двух. 
             //3.4. В новую ячейку ставим мин. значение
             //3.5. Корректируем значения во всех соответствующих ячейках, при этом если двигаемся вниз или вверх, то корректируем по столбцу. Если влево или вправо, то корректируем по строке.
+            return new int[1][];
         }
 
         public static void GetLongestCyclePathForElement(TreeForOptimize currentElement, TreeForOptimize searchingElement, List<TreeForOptimize> path,

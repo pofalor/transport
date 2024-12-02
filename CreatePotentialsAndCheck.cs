@@ -76,8 +76,6 @@ namespace Transport
                 toRem.Clear();
                 RowIndexes.Clear();
             }
-
-            Console.WriteLine();
         }
     
         public static bool CreatePotentialsOnMatrix(int?[] rowPotentials, int?[] colPotentials, Element[][] transportPlan, List<(int, int)> ValuesIndexes)
@@ -101,17 +99,6 @@ namespace Transport
                 }
             }
             return isNegative;                
-        }
-
-        public static void GetValueIndexes(, Element[][] transportPlan)
-        {
-            for (int i = 0; i < transportPlan.Length; i++)
-            {
-                for (int j = 0; j < transportPlan[j].Length; j++)
-                {
-                    if 
-                }
-            }
         }
     }
 }

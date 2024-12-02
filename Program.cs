@@ -52,7 +52,7 @@ class Program
             }
         }
         List<(int, int)> ValuesIndexes = new List<(int, int)> ();
-        distributeByVogel(N, M, costs, transportPlan, supplies, demands, notDefined);
+        distributeByVogel(N, M, costs, transportPlan, supplies, demands, notDefined, ValuesIndexes);
 
         var rowPotentials = new int?[N];
         var colPotentials = new int?[M];
@@ -64,22 +64,29 @@ class Program
         {
             // оптимизация через AnalyzePotentials
 
+            Array.Fill(rowPotentials, null);
+            Array.Fill(colPotentials, null);
             CreatePotentialsAndCheck.CreatePotentialsOnRowsAndCols(N, M, transportPlan, ValuesIndexes, rowPotentials, colPotentials);
         }
 
-        Console.WriteLine(JsonSerializer.Serialize(transportPlan));
+        int totalSum = 0;
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = 0; j < M; j++)
+            {
+                totalSum += transportPlan[i][j].Weight * transportPlan[i][j].Value;
+            }
+        }
+        Console.WriteLine(totalSum);
 
-        //int totalCost = SolveSync(N, M, supplies, demands, costs, transportPlan);
-
-        // Запись результатов
-        //using (var writer = new StreamWriter("out.txt"))
-        //{
-        //    writer.WriteLine(totalCost);
-        //    for (int i = 0; i < N; i++)
-        //    {
-        //        writer.WriteLine(string.Join(" ", transportPlan.GetRow(i)));
-        //    }
-        //}
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = 0; j < M; j++)
+            {
+                Console.Write(transportPlan[i][j].Weight + " ");
+            }
+            Console.WriteLine();
+        }
     }
     static void CheckSumsResources(int[] supplies, int[] demands)
     {
@@ -115,7 +122,7 @@ class Program
         costs = input.Skip(3).Select(line => line.Trim().Split().Select(int.Parse).ToArray()).ToArray();
     }
 
-    static void distributeByVogel(int N, int M, int[][] costs, Element[][] transportPlan, int[] supplies, int[] demands, HashSet<(int, int)> notDefined) //, List<(int, int)> values)
+    static void distributeByVogel(int N, int M, int[][] costs, Element[][] transportPlan, int[] supplies, int[] demands, HashSet<(int, int)> notDefined, List<(int, int)> values)
     {
         while (notDefined.Count > 1)
         {
@@ -125,7 +132,7 @@ class Program
             foreach (var (row, col) in indexes)
             {
                 transportPlan[row][col].Weight = Math.Min(supplies[row], demands[col]);
-                //if (transportPlan[row][col].Weight != 0) values.Add((row, col));
+                if (transportPlan[row][col].Weight != 0) values.Add((row, col));
                 notDefined.Remove((row, col));
                 supplies[row] -= transportPlan[row][col].Weight;
                 demands[col] -= transportPlan[row][col].Weight;
@@ -160,18 +167,13 @@ class Program
         if (notDefined.Count == 1)
         {
             var coords = notDefined.First();
-            if (supplies[coords.Item1] != demands[coords.Item2])
-            {
-                Console.WriteLine();
-            }
-            else
+            if (supplies[coords.Item1] == demands[coords.Item2])
             {
                 transportPlan[coords.Item1][coords.Item2].Weight = supplies[coords.Item1];
-                //values.Add(coords);
+                values.Add(coords);
                 supplies[coords.Item1] = demands[coords.Item2] = 0;
             }
         }
-        Console.WriteLine(transportPlan);
     }
 
     static void getIndexesToFillNeeds(int N, int M, int[][] costs, List<(int, int)> indexes, Element[][] transportPlan)
@@ -243,9 +245,6 @@ class Program
             indexes.Sort((a, b) => costs[a.Item1][a.Item2].CompareTo(costs[b.Item1][b.Item2]));
             //indexes.Sort()
         }
-        Console.WriteLine();
-
-
     }
 
 
@@ -265,10 +264,6 @@ class Program
             {
                 rowColDiff.Enqueue((twoMin[1].Weight - twoMin[0].Weight, (twoMin[0].index, j)), twoMin[0].Weight - twoMin[1].Weight);
             }
-            else
-            {
-                Console.WriteLine();
-            }
         }
         else
         {
@@ -281,10 +276,6 @@ class Program
             if (twoMin.Length == 2)
             {
                 rowColDiff.Enqueue((twoMin[1].Weight - twoMin[0].Weight, (i, twoMin[0].index)), twoMin[0].Weight - twoMin[1].Weight);
-            }
-            else
-            {
-                Console.WriteLine();
             }
         }
     }

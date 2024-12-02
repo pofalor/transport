@@ -52,7 +52,7 @@ namespace Transport
         private static Element GetElementWithOffset(Element[][] transportPlan, int indexRow, int indexCol, int? offsetRow = null, int? offsetCol = null)
         {
             var element = transportPlan[indexRow + offsetRow.GetValueOrDefault(0)][indexCol + offsetCol.GetValueOrDefault(0)];
-            if (!element.Weight.HasValue || element.Weight.Value == -1 || element.Weight.Value == 0)
+            if (element.Weight == -1 || element.Weight == 0)
             {
                 if (offsetRow.HasValue)
                 {
