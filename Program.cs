@@ -63,9 +63,10 @@ class Program
         while (CreatePotentialsAndCheck.CreatePotentialsOnMatrix(rowPotentials, colPotentials, transportPlan, ValuesIndexes))
         {
             // оптимизация через AnalyzePotentials
-
+            AnalyzePotential.OptimizeSolution(transportPlan, N, M, rowPotentials, colPotentials);
             Array.Fill(rowPotentials, null);
             Array.Fill(colPotentials, null);
+            
             CreatePotentialsAndCheck.CreatePotentialsOnRowsAndCols(N, M, transportPlan, ValuesIndexes, rowPotentials, colPotentials);
         }
 
