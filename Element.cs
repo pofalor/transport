@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +18,7 @@ namespace Transport
         /// <summary>
         /// Тут хранится значение отправляемого груза
         /// </summary>
-        public int? Weight { get; set; }
+        public int Weight { get; set; }
 
         public bool IsPotentialNegative { get; set; }
 
@@ -31,5 +31,11 @@ namespace Transport
         /// Индекс по столбцам(M)
         /// </summary>
         public int IndexCol { get; set; }
+
+        public override string ToString()
+        {
+            return this.Value.ToString()+ "{" + this.Weight.ToString() + "}";
+        }
+
     }
 }

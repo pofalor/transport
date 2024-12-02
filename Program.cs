@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -45,12 +45,27 @@ class Program
             transportPlan[i] = new Element[M];
             for (int j = 0; j < M; j++)
             {
+                transportPlan[i][j] = new Element();
                 transportPlan[i][j].Weight = -1;
+                transportPlan[i][j].Value = costs[i][j];
                 notDefined.Add((i, j));
             }
         }
+        List<(int, int)> ValuesIndexes = new List<(int, int)> ();
+        distributeByVogel(N, M, costs, transportPlan, supplies, demands, notDefined, ValuesIndexes);
 
-        distributeByVogel(N, M, costs, transportPlan, supplies, demands, notDefined);
+        var rowPotentials = new int?[N];
+        var colPotentials = new int?[M];
+
+        // находим потенциалы строк и столбцов
+        CreatePotentialsAndCheck.CreatePotentialsOnRowsAndCols(N, M, transportPlan, ValuesIndexes, rowPotentials, colPotentials);
+        // цикл проверки пока не будет отрицательных потенциалов
+        while (CreatePotentialsAndCheck.CreatePotentialsOnMatrix(rowPotentials, colPotentials, transportPlan))
+        {
+            // оптимизация через AnalyzePotentials
+
+            CreatePotentialsAndCheck.CreatePotentialsOnRowsAndCols(N, M, transportPlan, ValuesIndexes, rowPotentials, colPotentials);
+        }
 
         Console.WriteLine(JsonSerializer.Serialize(transportPlan));
 
@@ -100,7 +115,7 @@ class Program
         costs = input.Skip(3).Select(line => line.Trim().Split().Select(int.Parse).ToArray()).ToArray();
     }
 
-    static void distributeByVogel(int N, int M, int[][] costs, Element[][] transportPlan, int[] supplies, int[] demands, HashSet<(int, int)> notDefined)
+    static void distributeByVogel(int N, int M, int[][] costs, Element[][] transportPlan, int[] supplies, int[] demands, HashSet<(int, int)> notDefined, List<(int, int)> values)
     {
         while (notDefined.Count > 1)
         {
@@ -110,9 +125,11 @@ class Program
             foreach (var (row, col) in indexes)
             {
                 transportPlan[row][col].Weight = Math.Min(supplies[row], demands[col]);
+                if (transportPlan[row][col].Weight != 0) values.Add((row, col));
                 notDefined.Remove((row, col));
-                supplies[row] -= transportPlan[row][col].Weight.Value;
-                demands[col] -= transportPlan[row][col].Weight.Value;
+                supplies[row] -= transportPlan[row][col].Weight;
+                demands[col] -= transportPlan[row][col].Weight;
+
 
                 if (supplies[row] == 0)
                 {
@@ -150,6 +167,7 @@ class Program
             else
             {
                 transportPlan[coords.Item1][coords.Item2].Weight = supplies[coords.Item1];
+                values.Add(coords);
                 supplies[coords.Item1] = demands[coords.Item2] = 0;
             }
         }
@@ -238,14 +256,14 @@ class Program
         {
             var twoMin = costs
                 .Select(row => row[j])
-                .Select((value, index) => (value, index))
+                .Select((Weight, index) => (Weight, index))
                 .Where(x => transportPlan[x.index][j].Weight == -1)
                 .OrderBy(x => x.ToTuple().Item1)
                 .Take(2)
                 .ToArray();
             if (twoMin.Length == 2)
             {
-                rowColDiff.Enqueue((twoMin[1].value - twoMin[0].value, (twoMin[0].index, j)), twoMin[0].value - twoMin[1].value);
+                rowColDiff.Enqueue((twoMin[1].Weight - twoMin[0].Weight, (twoMin[0].index, j)), twoMin[0].Weight - twoMin[1].Weight);
             }
             else
             {
@@ -255,14 +273,14 @@ class Program
         else
         {
             var twoMin = costs[i]
-                .Select((value, index) => (value, index))
+                .Select((Weight, index) => (Weight, index))
                 .Where(x => transportPlan[i][x.index].Weight == -1)
                 .OrderBy(x => x.ToTuple().Item1)
                 .Take(2)
                 .ToArray();
             if (twoMin.Length == 2)
             {
-                rowColDiff.Enqueue((twoMin[1].value - twoMin[0].value, (i, twoMin[0].index)), twoMin[0].value - twoMin[1].value);
+                rowColDiff.Enqueue((twoMin[1].Weight - twoMin[0].Weight, (i, twoMin[0].index)), twoMin[0].Weight - twoMin[1].Weight);
             }
             else
             {
